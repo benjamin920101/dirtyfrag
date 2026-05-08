@@ -16,6 +16,11 @@ For detailed technical information and the timeline, [see here](assets/write-up.
 
 Because the embargo has currently been broken, no patch or CVE exists. After consultation with the maintainers on linux-distros@vs.openwall.org and at their request, this Dirty Frag document is being published. For the disclosure timeline, refer to the technical details.
 
+> [!NOTE]
+> **2026-05-08 Update:**
+> - The `xfrm-ESP Page-Cache Write` vulnerability has been assigned `CVE-2026-43284` and patched in mainline at [f4c50a4034e6](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f4c50a4034e62ab75f1d5cdd191dd5f9c77fdff4).
+> - The `RxRPC Page-Cache Write` vulnerability has been reserved as `CVE-2026-43500` for tracking; no patch exists in any tree yet.
+
 # Exploiting
 
 ## One-line special
