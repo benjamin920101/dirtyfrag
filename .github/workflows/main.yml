@@ -1,0 +1,89 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            compiler: gcc
+            package: ""
+          - arch: arm64
+            compiler: aarch64-linux-gnu-gcc
+            package: gcc-aarch64-linux-gnu
+          - arch: armv7
+            compiler: arm-linux-gnueabihf-gcc
+            package: gcc-arm-linux-gnueabihf
+          - arch: riscv64
+            compiler: riscv64-linux-gnu-gcc
+            package: gcc-riscv64-linux-gnu
+          - arch: s390x
+            compiler: s390x-linux-gnu-gcc
+            package: gcc-s390x-linux-gnu
+          - arch: ppc64le
+            compiler: powerpc64le-linux-gnu-gcc
+            package: gcc-powerpc64le-linux-gnu
+          - arch: mips
+            compiler: mips-linux-gnu-gcc
+            package: gcc-mips-linux-gnu
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cross compiler
+        if: matrix.package != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.package }}
+
+      - name: Build binary
+        run: |
+          mkdir -p dist
+          ${{ matrix.compiler }} -O2 -o "dist/dirtyfrag-linux-${{ matrix.arch }}" ./exp.c
+          chmod +x "dist/dirtyfrag-linux-${{ matrix.arch }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dirtyfrag-${{ matrix.arch }}
+          path: dist/dirtyfrag-linux-${{ matrix.arch }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4.1.3
+        with:
+          path: release-assets
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          generate_release_notes: true
+          files: |
+            release-assets/dirtyfrag-amd64/dirtyfrag-linux-amd64
+            release-assets/dirtyfrag-arm64/dirtyfrag-linux-arm64
+            release-assets/dirtyfrag-armv7/dirtyfrag-linux-armv7
+            release-assets/dirtyfrag-riscv64/dirtyfrag-linux-riscv64
+            release-assets/dirtyfrag-s390x/dirtyfrag-linux-s390x
+            release-assets/dirtyfrag-ppc64le/dirtyfrag-linux-ppc64le
+            release-assets/dirtyfrag-mips/dirtyfrag-linux-mips
